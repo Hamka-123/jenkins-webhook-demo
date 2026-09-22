@@ -21,6 +21,11 @@ on:
         required: true
         default: 'v3.0.0'
         type: string
+      run_tests:
+        description: 'Force full integration testing'
+        required: true
+        default: true
+        type: boolean
 
 jobs:
   notify-jenkins:
@@ -31,6 +36,7 @@ jobs:
           # Используем переменные из ручного запуска или дефолтные при push
           ENV_VAL="${{ github.event.inputs.target_env || 'production' }}"
           TAG_VAL="${{ github.event.inputs.release_tag || 'v3.0.0' }}"
+          TESTS_VAL="${{ github.event.inputs.run_tests || 'true' }}"
 
           curl -X POST -i \
-            "https://admin:${{ secrets.JENKINS_TOKEN }}@234f2fabd15dda1f-1-8080.spca.r.killercoda.com/job/test/buildWithParameters?TARGET_ENV=${ENV_VAL}&RELEASE_TAG=${TAG_VAL}"
+            "https://admin:${{ secrets.JENKINS_TOKEN }}@234f2fabd15dda1f-1-8080.spca.r.killercoda.com/job/test/buildWithParameters?TARGET_ENV=${ENV_VAL}&RELEASE_TAG=${TAG_VAL}&RUN_TESTS=${TESTS_VAL}"
