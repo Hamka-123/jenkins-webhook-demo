@@ -1,33 +1,36 @@
-# This is a basic workflow to help you get started with Actions
+name: Trigger Jenkins Build
 
-name: CI
-
-# Controls when the workflow will run
 on:
-  # Triggers the workflow on push or pull request events but only for the "main" branch
   push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
-
-  # Allows you to run this workflow manually from the Actions tab
+    branches:
+      - main
+  # Позволяет запускать сборку вручную прямо из интерфейса GitHub с выбором параметров
   workflow_dispatch:
+    inputs:
+      target_env:
+        description: 'Target Environment'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - production
+          - staging
+          - development
+      release_tag:
+        description: 'Release Tag (e.g. v3.0.0)'
+        required: true
+        default: 'v3.0.0'
+        type: string
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build"
-  build:
-    # The type of runner that the job will run on
+  notify-jenkins:
     runs-on: ubuntu-latest
-
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v4
-
-      # Runs a set of commands using the runners shell
-      - name: Run a multi-line script
+      - name: Send POST request to Jenkins
         run: |
-          curl -X POST -i -u "admin:118823d88945d1a86c48c3db97d10ab2f2" \
-          "https://dc8c575261676e05-1-8080.spca.r.killercoda.com:8080/job/test/buildWithParameters?TARGET_ENV=production&RELEASE_TAG=v3.0.0"
+          # Используем переменные из ручного запуска или дефолтные при push
+          ENV_VAL="${{ github.event.inputs.target_env || 'production' }}"
+          TAG_VAL="${{ github.event.inputs.release_tag || 'v3.0.0' }}"
 
+          curl -X POST -i \
+            "https://admin:${{ secrets.JENKINS_TOKEN }}@234f2fabd15dda1f-1-8080.spca.r.killercoda.com/job/test/buildWithParameters?TARGET_ENV=${ENV_VAL}&RELEASE_TAG=${TAG_VAL}"
